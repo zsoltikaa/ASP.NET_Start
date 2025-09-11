@@ -20,8 +20,20 @@ namespace MvcMovies.Controllers
         }
 
         // GET: Movies
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchString)
         {
+            if (_context.Movie == null)
+            {
+                return Problem("Entity set Movie is null. ");
+            }
+
+            var movies = _context.Movie.Select(m => m);
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                movies = movies.Where(s => s.Title.ToUpper().Contains(searchString.ToUpper()));
+            }
+
             return View(await _context.Movie.ToListAsync());
         }
 
