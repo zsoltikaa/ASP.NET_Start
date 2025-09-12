@@ -37,6 +37,12 @@ namespace MvcMovies.Controllers
             return View(await _context.Movie.ToListAsync());
         }
 
+        [HttpPost]
+        public string Index(string searchString, bool notUsed)
+        {
+            return $"http POST: searchString: '{searchString}'";
+        }
+
         // GET: Movies/Details/5
         public async Task<IActionResult> Details(int? id)
         {
