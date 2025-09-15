@@ -20,12 +20,21 @@ namespace MvcMovies.Controllers
         }
 
         // GET: Movies
-        public async Task<IActionResult> Index(string searchString)
+        public async Task<IActionResult> Index(string searchString, string movieGenre)
         {
             if (_context.Movie == null)
             {
                 return Problem("Entity set Movie is null. ");
             }
+
+            var genreQuery = _context.Movie
+                .Select(m => m.Genre)
+                .Distinct()
+                .Order();
+
+            //IQueryable<string> genreQuery = from m in _context.Movie
+            //                                orderby m.Genre
+            //                                select m.Genre;
 
             var movies = _context.Movie.Select(m => m);
 
@@ -34,14 +43,25 @@ namespace MvcMovies.Controllers
                 movies = movies.Where(s => s.Title.ToUpper().Contains(searchString.ToUpper()));
             }
 
-            return View(await _context.Movie.ToListAsync());
+            if (!string.IsNullOrEmpty(movieGenre))
+            {
+                movies = movies.Where(x => x.Genre == movieGenre);
+            }
+
+            var movieGenreVM = new MovieGenreViewModel
+            {
+                Genres = new SelectList(await genreQuery.ToListAsync()),
+                Movies = await movies.ToListAsync()
+            };
+
+            return View(movieGenreVM);
         }
 
-        [HttpPost]
-        public string Index(string searchString, bool notUsed)
-        {
-            return $"http POST: searchString: '{searchString}'";
-        }
+        //[HttpPost]
+        //public string Index(string searchString, bool notUsed)
+        //{
+        //    return $"http POST: searchString: '{searchString}'";
+        //}
 
         // GET: Movies/Details/5
         public async Task<IActionResult> Details(int? id)
@@ -72,7 +92,7 @@ namespace MvcMovies.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Title,ReleaseDate,Genre,Price")] Movie movie)
+        public async Task<IActionResult> Create([Bind("Id,Title,ReleaseDate,Genre,Price,Rating")] Movie movie)
         {
             if (ModelState.IsValid)
             {
@@ -104,7 +124,7 @@ namespace MvcMovies.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,ReleaseDate,Genre,Price")] Movie movie)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,ReleaseDate,Genre,Price,Rating")] Movie movie)
         {
             if (id != movie.Id)
             {
